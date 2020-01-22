@@ -10,18 +10,20 @@ def get_data():
 					"type": "doctype",
 					"name": "Quality Goal",
 					"description":_("Quality Goal."),
+					"onboard": 1,
 				},
 				{
 					"type": "doctype",
 					"name": "Quality Procedure",
 					"description":_("Quality Procedure."),
+					"onboard": 1,
 				},
 				{
 					"type": "doctype",
 					"name": "Quality Procedure",
 					"icon": "fa fa-sitemap",
 					"label": _("Tree of Procedures"),
-					"route": "Tree/Quality Procedure",
+					"route": "#Tree/Quality Procedure",
 					"description": _("Tree of Quality Procedures."),
 				},
 			]
@@ -33,6 +35,7 @@ def get_data():
 					"type": "doctype",
 					"name": "Quality Review",
 					"description":_("Quality Review"),
+					"onboard": 1,
 				},
 				{
 					"type": "doctype",
@@ -56,13 +59,14 @@ def get_data():
 			"items": [
 				{
 					"type": "doctype",
-					"name": "Customer Feedback",
-					"description":_("Customer Feedback"),
+					"name": "Quality Feedback",
+					"description":_("Quality Feedback"),
+					"onboard": 1,
 				},
 				{
 					"type": "doctype",
-					"name": "Customer Feedback Template",
-					"description":_("Customer Feedback Template"),
+					"name": "Quality Feedback Template",
+					"description":_("Quality Feedback Template"),
 				}
 			]
 		},

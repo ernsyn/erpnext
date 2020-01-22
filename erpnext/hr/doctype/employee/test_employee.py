@@ -7,6 +7,7 @@ import frappe
 import erpnext
 import unittest
 import frappe.utils
+from erpnext.hr.doctype.employee.employee import EmployeeLeftValidationError
 
 test_records = frappe.get_test_records('Employee')
 
@@ -32,7 +33,19 @@ class TestEmployee(unittest.TestCase):
 		email_queue = frappe.db.sql("""select * from `tabEmail Queue`""", as_dict=True)
 		self.assertTrue("Subject: Birthday Reminder" in email_queue[0].message)
 
-def make_employee(user):
+	def test_employee_status_left(self):
+		employee1 = make_employee("test_employee_1@company.com")
+		employee2 = make_employee("test_employee_2@company.com")
+		employee1_doc = frappe.get_doc("Employee", employee1)
+		employee2_doc = frappe.get_doc("Employee", employee2)
+		employee2_doc.reload()
+		employee2_doc.reports_to = employee1_doc.name
+		employee2_doc.save()
+		employee1_doc.reload()
+		employee1_doc.status = 'Left'
+		self.assertRaises(EmployeeLeftValidationError, employee1_doc.save)
+
+def make_employee(user, company=None):
 	if not frappe.db.get_value("User", user):
 		frappe.get_doc({
 			"doctype": "User",
@@ -42,12 +55,12 @@ def make_employee(user):
 			"roles": [{"doctype": "Has Role", "role": "Employee"}]
 		}).insert()
 
-	if not frappe.db.get_value("Employee", {"user_id": user}):
+	if not frappe.db.get_value("Employee", { "user_id": user, "company": company or erpnext.get_default_company() }):
 		employee = frappe.get_doc({
 			"doctype": "Employee",
 			"naming_series": "EMP-",
 			"first_name": user,
-			"company": erpnext.get_default_company(),
+			"company": company or erpnext.get_default_company(),
 			"user_id": user,
 			"date_of_birth": "1990-05-08",
 			"date_of_joining": "2013-01-01",

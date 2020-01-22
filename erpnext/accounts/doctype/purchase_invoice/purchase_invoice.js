@@ -9,9 +9,12 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 		this.setup_posting_date_time_check();
 		this._super(doc);
 
-		// formatter for material request item
-		this.frm.set_indicator_formatter('item_code',
-			function(doc) { return (doc.qty<=doc.received_qty) ? "green" : "orange" })
+		// formatter for purchase invoice item
+		if(this.frm.doc.update_stock) {
+			this.frm.set_indicator_formatter('item_code', function(doc) {
+				return (doc.qty<=doc.received_qty) ? "green" : "orange";
+			});
+		}
 	},
 	onload: function() {
 		this._super();
@@ -93,7 +96,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 					},
 					get_query_filters: {
 						docstatus: 1,
-						status: ["!=", "Closed"],
+						status: ["not in", ["Closed", "On Hold"]],
 						per_billed: ["<", 99.99],
 						company: me.frm.doc.company
 					}
@@ -154,7 +157,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 	can_change_release_date: function(date) {
 		const diff = frappe.datetime.get_diff(date, frappe.datetime.nowdate());
 		if (diff < 0) {
-			frappe.throw('New release date should be in the future');
+			frappe.throw(__('New release date should be in the future'));
 			return false;
 		} else {
 			return true;
@@ -164,8 +167,15 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 	make_comment_dialog_and_block_invoice: function(){
 		const me = this;
 
-		const title = __('Add Comment');
+		const title = __('Block Invoice');
 		const fields = [
+			{
+				fieldname: 'release_date',
+				read_only: 0,
+				fieldtype:'Date',
+				label: __('Release Date'),
+				default: me.frm.doc.release_date
+			},
 			{
 				fieldname: 'hold_comment',
 				read_only: 0,
@@ -184,7 +194,11 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			const dialog_data = me.dialog.get_values();
 			frappe.call({
 				'method': 'erpnext.accounts.doctype.purchase_invoice.purchase_invoice.block_invoice',
-				'args': {'name': me.frm.doc.name, 'hold_comment': dialog_data.hold_comment},
+				'args': {
+					'name': me.frm.doc.name,
+					'hold_comment': dialog_data.hold_comment,
+					'release_date': dialog_data.release_date
+				},
 				'callback': (r) => me.frm.reload_doc()
 			});
 			me.dialog.hide();
@@ -282,6 +296,7 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 	is_paid: function() {
 		hide_fields(this.frm.doc);
 		if(cint(this.frm.doc.is_paid)) {
+			this.frm.set_value("allocate_advances_automatically", 0);
 			if(!this.frm.doc.company) {
 				this.frm.set_value("is_paid", 0)
 				frappe.msgprint(__("Please specify Company to proceed"));
@@ -326,23 +341,6 @@ erpnext.accounts.PurchaseInvoice = erpnext.buying.BuyingController.extend({
 			frm: cur_frm
 		})
 	},
-
-	asset: function(frm, cdt, cdn) {
-		var row = locals[cdt][cdn];
-		if(row.asset) {
-			frappe.call({
-				method: "erpnext.assets.doctype.asset_category.asset_category.get_asset_category_account",
-				args: {
-					"asset": row.asset,
-					"fieldname": "fixed_asset_account",
-					"account": row.expense_account
-				},
-				callback: function(r, rt) {
-					frappe.model.set_value(cdt, cdn, "expense_account", r.message);
-				}
-			})
-		}
-	}
 });
 
 cur_frm.script_manager.make(erpnext.accounts.PurchaseInvoice);
@@ -395,21 +393,11 @@ cur_frm.fields_dict['items'].grid.get_field("item_code").get_query = function(do
 
 cur_frm.fields_dict['credit_to'].get_query = function(doc) {
 	// filter on Account
-	if (doc.supplier) {
-		return {
-			filters: {
-				'account_type': 'Payable',
-				'is_group': 0,
-				'company': doc.company
-			}
-		}
-	} else {
-		return {
-			filters: {
-				'report_type': 'Balance Sheet',
-				'is_group': 0,
-				'company': doc.company
-			}
+	return {
+		filters: {
+			'account_type': 'Payable',
+			'is_group': 0,
+			'company': doc.company
 		}
 	}
 }
@@ -426,19 +414,7 @@ cur_frm.fields_dict['select_print_heading'].get_query = function(doc, cdt, cdn) 
 cur_frm.set_query("expense_account", "items", function(doc) {
 	return {
 		query: "erpnext.controllers.queries.get_expense_account",
-		filters: {'company': doc.company}
-	}
-});
-
-cur_frm.set_query("asset", "items", function(doc, cdt, cdn) {
-	var d = locals[cdt][cdn];
-	return {
-		filters: {
-			'item_code': d.item_code,
-			'docstatus': 1,
-			'company': doc.company,
-			'status': 'Submitted'
-		}
+		filters: {'company': doc.company }
 	}
 });
 
@@ -465,7 +441,7 @@ cur_frm.fields_dict["items"].grid.get_field("cost_center").get_query = function(
 
 cur_frm.cscript.cost_center = function(doc, cdt, cdn){
 	var d = locals[cdt][cdn];
-	if(d.idx == 1 && d.cost_center){
+	if(d.cost_center){
 		var cl = doc.items || [];
 		for(var i = 0; i < cl.length; i++){
 			if(!cl[i].cost_center) cl[i].cost_center = d.cost_center;
@@ -507,11 +483,25 @@ frappe.ui.form.on("Purchase Invoice", {
 				}
 			}
 		}
+
+		frm.set_query("cost_center", function() {
+			return {
+				filters: {
+					company: frm.doc.company,
+					is_group: 0
+				}
+			};
+		});
 	},
 
 	onload: function(frm) {
-		if(frm.doc.__onload && !frm.doc.__onload.supplier_tds) {
-			me.frm.set_df_property("apply_tds", "read_only", 1);
+		if(frm.doc.__onload) {
+			if(frm.doc.supplier) {
+				frm.doc.apply_tds = frm.doc.__onload.supplier_tds ? 1 : 0;
+			}
+			if(!frm.doc.__onload.supplier_tds) {
+				frm.set_df_property("apply_tds", "read_only", 1);
+			}
 		}
 
 		erpnext.queries.setup_queries(frm, "Warehouse", function() {

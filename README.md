@@ -1,12 +1,11 @@
 <div align="center">
-    <img src="https://github.com/frappe/design/blob/master/logos/erpnext-logo.svg" height="128">
+    <img src="https://raw.githubusercontent.com/frappe/erpnext/develop/erpnext/public/images/erpnext-logo.png" height="128">
     <h2>ERPNext</h2>
     <p align="center">
         <p>ERP made simple</p>
     </p>
 
-[![Build Status](https://travis-ci.com/frappe/erpnext.png)](https://travis-ci.com/frappe/erpnext)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/frappe/erpnext?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
+[![Build Status](https://travis-ci.com/frappe/erpnext.svg)](https://travis-ci.com/frappe/erpnext)
 [![Open Source Helpers](https://www.codetriage.com/frappe/erpnext/badges/users.svg)](https://www.codetriage.com/frappe/erpnext)
 [![Coverage Status](https://coveralls.io/repos/github/frappe/erpnext/badge.svg?branch=develop)](https://coveralls.io/github/frappe/erpnext?branch=develop)
 
@@ -14,11 +13,28 @@
 
 </div>
 
-Includes: Accounting, Inventory, Manufacturing, CRM, Sales, Purchase, Project Management, HRMS. Requires MariaDB.
+ERPNext as a monolith includes the following areas for managing businesses:
 
-ERPNext is built on the [Frappe](https://github.com/frappe/frappe) Framework, a full-stack web app framework in Python & JavaScript.
+1. [Accounting](https://erpnext.com/docs/user/manual/en/accounts)
+1. [Inventory](https://erpnext.com/docs/user/manual/en/stock)
+1. [CRM](https://erpnext.com/docs/user/manual/en/CRM)
+1. [Sales](https://erpnext.com/docs/user/manual/en/selling)
+1. [Purchase](https://erpnext.com/docs/user/manual/en/buying)
+1. [HRMS](https://erpnext.com/docs/user/manual/en/human-resources)
+1. [Project Management](https://erpnext.com/docs/user/manual/en/projects)
+1. [Support](https://erpnext.com/docs/user/manual/en/support)
+1. [Asset Management](https://erpnext.com/docs/user/manual/en/asset)
+1. [Quality Management](https://erpnext.com/docs/user/manual/en/quality-management)
+1. [Manufacturing](https://erpnext.com/docs/user/manual/en/manufacturing)
+1. [Website Management](https://erpnext.com/docs/user/manual/en/website)
+1. [Customize ERPNext](https://erpnext.com/docs/user/manual/en/customize-erpnext)
+1. [And More](https://erpnext.com/docs/user/manual/en/)
 
-- [User Guide](https://erpnext.org/docs/user)
+ERPNext requires MariaDB.
+
+ERPNext is built on the [Frappe Framework](https://github.com/frappe/frappe), a full-stack web app framework built with Python & JavaScript.
+
+- [User Guide](https://erpnext.com/docs/user)
 - [Discussion Forum](https://discuss.erpnext.com/)
 
 ---
@@ -50,7 +66,7 @@ The ERPNext code is licensed as GNU General Public License (v3) and the Document
 ## Contributing
 
 1. [Issue Guidelines](https://github.com/frappe/erpnext/wiki/Issue-Guidelines)
-1. [Report Security Vulnerabilities](https://erpnext.com/report)
+1. [Report Security Vulnerabilities](https://erpnext.com/security)
 1. [Pull Request Requirements](https://github.com/frappe/erpnext/wiki/Contribution-Guidelines)
 1. [Translations](https://translate.erpnext.com)
 1. [Chart of Accounts](https://charts.erpnext.com)
